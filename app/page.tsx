@@ -13,51 +13,46 @@ import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar"
 import { useEffect, useState } from "react"
-import {fetchLinks} from "@/lib/api";
-
-const links:Link[] = [
-  {
-    shortUrl: "tinylink.in/try",
-    longUrl: "https://tinylink.in/register",
-    clickCount:10,
-    logo:""
-  },
-  {
-    shortUrl: "tinylink.in/UygsAG9",
-    longUrl: "https://www.linkedin.com/posts/alexxubyte_systemdesign-coding-interviewtips-activity-7149078423095672833-jvv4?utm_source=share&utm_medium=member_desktop",
-    clickCount:25,
-    logo:""
-  },
-  {
-    shortUrl: "tinylink.in/71SLcZH",
-    longUrl: "https://stackoverflow.com/questions/69220042/npm-err-unsupported-url-type-workspace-workspace",
-    clickCount:50,
-    logo:""
-  },
-]
+import {fetchLinks, generateShortUrl} from "@/app/api/ApiRoutes";
+import { Link } from "./models/LinkModel"
 
 type CardProps = React.ComponentProps<typeof Card>
 
-type Link = {
-  shortUrl: string,
-  longUrl: string,
-  clickCount: number,
-  logo: string
-}
-
 export default function CardDemo({ className, ...props }: CardProps) {
 
-  const [linkList, setLinks] = useState([]);
+  const [longUrl, setLongUrl] = useState('');
+  const [linkList, setLinks] = useState<Link[]>([]);
 
-  useEffect(() => {
-    const getLinks = async () => {
+  const generateShortUrlHandler = async () => {
+    try {
+      const generatedShortUrl = await generateShortUrl(longUrl);
+
+      if (generatedShortUrl) {
+        console.log('Generated Short URL:', generatedShortUrl);
+        // Reload the list of links after short URL is generated
+        reloadLinks();
+      }
+    } catch (error) {
+      console.error('Error generating short URL:', error);
+    }
+  };
+
+  const reloadLinks = async () => {
+    try {
       const linksData = await fetchLinks();
+
       if (linksData) {
         setLinks(linksData);
+        console.log('Reloaded Links:', linksData);
       }
-    };
+    } catch (error) {
+      console.error('Error reloading links:', error);
+    }
+  };
 
-    getLinks();
+  useEffect(() => {
+    // Load initial list of links when the component mounts
+    reloadLinks();
   }, []);
 
   return (
@@ -69,11 +64,11 @@ export default function CardDemo({ className, ...props }: CardProps) {
         </CardHeader>
         <CardContent className="grid gap-4">
             <div className="flex w-full max-w-sm items-center space-x-2">
-                <Input type="text" placeholder="https://app.tinylink.in/register" />
-                <Button type="submit">Generate</Button>
+                <Input type="text" placeholder="https://app.tinylink.in/register" value={longUrl} onChange={(e) => setLongUrl(e.target.value)}/>
+                <Button type="submit" onClick={generateShortUrlHandler}>Generate</Button>
             </div>
             <div>
-            {links.map((link, index) => (
+            {linkList.map((link, index) => (
                 <div
                 key={index}
                 className="mb-4 grid grid-cols-[25px_1fr] items-start pb-4 last:mb-0 last:pb-0 gap-4"
@@ -84,10 +79,12 @@ export default function CardDemo({ className, ...props }: CardProps) {
                     </Avatar>
                     <div className="truncate space-y-1">
                         <p className="text-sm font-medium leading-none">
-                            {link.shortUrl}
+                          <a href={link.urlShort} target="_blank" rel="noopener noreferrer">
+                            {"tinylink.in/" + link.urlShort}
+                          </a>  
                         </p>
                         <p className="text-sm text-muted-foreground">
-                            {link.longUrl}
+                            {link.urlOriginal}
                         </p>
                     </div>
                 </div>
