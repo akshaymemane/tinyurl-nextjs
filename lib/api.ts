@@ -1,7 +1,7 @@
 
 const fetchLinks = async () => {
     try {
-      const response = await fetch('https://your-api-url/links');
+      const response = await fetch('https://thinrl.com:8080/all');
       const data = await response.json();
       return data;
     } catch (error) {

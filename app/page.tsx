@@ -45,7 +45,7 @@ type Link = {
   logo: string
 }
 
-export default function CardDemo({ className, ...props }: CardProps) {
+export default function CardDemo({ className, ...props }: any) {
 
   const [linkList, setLinks] = useState([]);
 
